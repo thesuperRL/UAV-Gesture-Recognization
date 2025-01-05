@@ -6,6 +6,7 @@ pitch = ""
 throttle = ""
 yaw = ""
 
+
 async def main():
     """Main function to connect to the drone and input manual controls"""
     global roll, pitch, yaw, throttle
