@@ -52,11 +52,11 @@ async def main():
     print("-- wait")
     await asyncio.sleep(1)
     print("-- Change manual control")
-    roll = 0.1
+    roll = 0.5
     pitch = 0.1
     throttle = 0.4
     yaw = 0.0
-    await asyncio.sleep(5)
+    await asyncio.sleep(20)
 
     await drone.action.land()
     print("-- end")
