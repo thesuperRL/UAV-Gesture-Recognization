@@ -1,10 +1,62 @@
 import asyncio
+from pynput import keyboard
 from mavsdk import System
+
+velocity = None
 
 roll = ""
 pitch = ""
 throttle = ""
 yaw = ""
+
+def on_press(key):
+    global roll, pitch, throttle, yaw
+    try:
+        if key.char == 'w':
+            print("w press")
+            roll = 0.0
+            pitch = 0.5
+            throttle = 0.5
+            yaw = 0.0
+        elif key.char == 'a':
+            print("a press")
+            roll = -0.5
+            pitch = 0.0
+            throttle = 0.5
+            yaw = 0.0
+        elif key.char == 's':
+            print("s press")
+            roll = 0.0
+            pitch = -0.5
+            throttle = 0.5
+            yaw = 0.0
+        elif key.char == 'd':
+            print("d press")
+            roll = 0.5
+            pitch = 0.0
+            throttle = 0.5
+            yaw = 0.0
+        elif key.char == 'q':
+            print("q press")
+            roll = 0.0
+            pitch = 0.0
+            throttle = 0.7
+            yaw = 0.0
+        elif key.char == 'e':
+            print("e press")
+            roll = 0.0
+            pitch = 0.0
+            throttle = 0.2
+            yaw = 0.0
+        else:
+            print(str(key) + " pressed, reset speed")
+            roll = 0.0
+            pitch = 0.0
+            throttle = 0.5
+            yaw = 0.0
+    except:
+        print("failed to rec")
+        print(key)
 
 
 async def main():
@@ -51,12 +103,13 @@ async def main():
     await drone.manual_control.start_position_control()
     print("-- wait")
     await asyncio.sleep(1)
-    print("-- Change manual control")
-    roll = 0.5
-    pitch = 0.1
-    throttle = 0.4
-    yaw = 0.0
-    await asyncio.sleep(20)
+    print("-- Activating manual control")
+
+    listener = keyboard.Listener(
+        on_press=on_press)
+    listener.start()
+
+    await asyncio.sleep(30)
 
     await drone.action.land()
     print("-- end")
