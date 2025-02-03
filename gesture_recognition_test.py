@@ -7,10 +7,11 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
-model_path = '/home/ryanli/PycharmProjects/UAV-Gesture-Recognization/Google-Gesture-Recognition/gesture_recognizer.task'
+model_path = 'Google-Gesture-Recognition/gesture_recognizer.task'
 base_options = BaseOptions(model_asset_path=model_path)
 
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
 with mp_hands.Hands(
     model_complexity=0,
     min_detection_confidence=0.5,
