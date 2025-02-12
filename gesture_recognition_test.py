@@ -10,7 +10,7 @@ mp_hands = mp.solutions.hands
 model_path = '/home/ryanli/PycharmProjects/UAV-Gesture-Recognization/Google-Gesture-Recognition/gesture_recognizer.task'
 base_options = BaseOptions(model_asset_path=model_path)
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 with mp_hands.Hands(
     model_complexity=0,
     min_detection_confidence=0.5,
