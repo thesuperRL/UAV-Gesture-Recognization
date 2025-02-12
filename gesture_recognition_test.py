@@ -45,13 +45,14 @@ with GestureRecognizer.create_from_options(options) as recognizer:
 
     try:
         top_gesture = recognition_result.gestures[0][0]
+        print("Gesture Probably: " + str(top_gesture.category_name))
         hand_landmarks = recognition_result.hand_landmarks
     except:
         print("Unrecognized Gestures")
         cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
+        if cv2.waitKey(5) & 0xFF == 27:
+          break
         continue
-
-    print(recognition_result.hand_landmarks[0])
 
     # Draw the hand annotations on the image.
     image.flags.writeable = True
