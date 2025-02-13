@@ -2,6 +2,7 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import cv2
+import time
 import numpy as np
 from mediapipe.framework.formats import landmark_pb2
 
@@ -21,9 +22,12 @@ GestureRecognizer = mp.tasks.vision.GestureRecognizer
 def print_result(result: GestureRecognizerResult, output_image: mp.Image, timestamp_ms: int):
     print('gesture recognition result: {}'.format(result))
 
+scale = 2.0
+fps = 30.0
+
 cap = cv2.VideoCapture(0)
-cap.set(3, 252)
-cap.set(4, 288)
+cap.set(3, int(256.0*scale))
+cap.set(4, int(144.0*scale))
 cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
 
 options = vision.GestureRecognizerOptions(
@@ -31,6 +35,7 @@ options = vision.GestureRecognizerOptions(
 with GestureRecognizer.create_from_options(options) as recognizer:
   while cap.isOpened():
     success, image = cap.read()
+    time.sleep(1.0/fps)
     if not success:
       print("Ignoring empty camera frame.")
       # If loading a video, use 'break' instead of 'continue'.
@@ -38,7 +43,6 @@ with GestureRecognizer.create_from_options(options) as recognizer:
 
     # To improve performance, optionally mark the image as not writeable to
     # pass by reference.
-    image.flags.writeable = False
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
     recognition_result = recognizer.recognize(mp_image)
