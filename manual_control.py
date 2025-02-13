@@ -17,6 +17,8 @@ roll_default = 0.0
 pitch_default = 0.0
 throttle_default = 0.5
 yaw_default = 0.0
+# drone MC does not start initialized
+drone_manual_control_initialized = False
 
 # Initialize details on defaults
 roll = roll_default
@@ -106,19 +108,30 @@ def send_command(command):
 
 # Parse gestures and map them to commands
 def parse_gesture(gesture_object):
-    if gesture_object.category_name == "Open_Palm":
+    global drone_manual_control_initialized
+    if gesture_object.category_name == "Thumb_Up":
         send_command("ascend")
-    elif gesture_object.category_name == "Closed_Fist":
+    elif gesture_object.category_name == "Thumb_Down":
         send_command("descend")
-    elif gesture_object.category_name == "Victory":
+    elif gesture_object.category_name == "Closed_Fist":
+        send_command("backward")
+    elif gesture_object.category_name == "Open_Palm":
+        send_command("forward")
+    elif gesture_object.category_name == "Pointing_Up":
+        # CHECK POINT DIRECTION. FOR NOW REMAIN HOVER
         send_command("hover")
+    elif gesture_object.category_name == "I_Love_You":
+        print("Landing and Turning Off Drone")
+        drone_manual_control_initialized = False
     else:
-        print("Not Recognized as Command")
+        # HOVER ON UNRECOGNIZED
+        send_command("hover")
 
 # Main thread. Parses connection of drone and manual controls to make stuff work
 async def main():
     """Main function to connect to the drone and input manual controls"""
     global roll, pitch, yaw, throttle
+    global drone_manual_control_initialized
     # Connect to the Simulation
     drone = System()
     await drone.connect(system_address="udp://:14540")
@@ -158,6 +171,8 @@ async def main():
     # start manual control
     print("-- Starting manual control")
     await drone.manual_control.start_position_control()
+    # drone is now initialized
+    drone_manual_control_initialized = True
     print("-- wait")
     await asyncio.sleep(1)
     print("-- Activating manual control")
@@ -165,11 +180,7 @@ async def main():
     thread = Thread(target=recognizer_threaded)
     thread.start()
 
-    # listener = keyboard.Listener(
-    #     on_press=send_command)
-    # listener.start()
-
-    while True:
+    while drone_manual_control_initialized:
         await asyncio.sleep(1)
 
     await drone.action.land()
