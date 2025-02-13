@@ -11,46 +11,44 @@ import numpy as np
 from mediapipe.framework.formats import landmark_pb2
 from threading import Thread
 
+# Initial Drone Attributes. Set initial/default parameters. These parameters are for hover
 velocity = None
+roll_default = 0.0
+pitch_default = 0.0
+throttle_default = 0.5
+yaw_default = 0.0
 
-roll = ""
-pitch = ""
-throttle = ""
-yaw = ""
+# Initialize details on defaults
+roll = roll_default
+pitch = pitch_default
+throttle = throttle_default
+yaw = yaw_default
 
-mp_drawing = mp.solutions.drawing_utils
-mp_drawing_styles = mp.solutions.drawing_styles
-mp_hands = mp.solutions.hands
-
+# Set video feed min requirements and model path
 model_path = '/home/ryanli/PycharmProjects/UAV-Gesture-Recognization/Google-Gesture-Recognition/gesture_recognizer.task'
+scale = 1.0 # less scale causes better (less laggy) video feed
+fps = 30.0 # same with FPS I believe but it hasnt been tested
 
-# STEP 2: Create an GestureRecognizer object.
+# Creating Gesture Recognition model details
 base_options = python.BaseOptions(model_asset_path=model_path)
 VisionRunningMode = mp.tasks.vision.RunningMode
 GestureRecognizerResult = mp.tasks.vision.GestureRecognizerResult
 GestureRecognizer = mp.tasks.vision.GestureRecognizer
+options = vision.GestureRecognizerOptions(
+    base_options=base_options)
+# For visualization, draw on the detected landmarks
+mp_drawing = mp.solutions.drawing_utils
+mp_drawing_styles = mp.solutions.drawing_styles
+mp_hands = mp.solutions.hands
 
-scale = 1.0
-fps = 30.0
-
+# OpenCV details. Initialize videocapture camera on the zeroeth one, set width and height
 cap = cv2.VideoCapture(0)
 cap.set(3, int(256.0 * scale))
 cap.set(4, int(144.0 * scale))
+# make it run better
 cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc('M', 'J', 'P', 'G'))
 
-options = vision.GestureRecognizerOptions(
-    base_options=base_options)
-
-def parse_gesture(gesture_object):
-    if gesture_object.category_name == "Open_Palm":
-        send_command("ascend")
-    elif gesture_object.category_name == "Closed_Fist":
-        send_command("descend")
-    elif gesture_object.category_name == "Victory":
-        send_command("hover")
-    else:
-        print("Not Recognized as Command")
-
+# Change situations by command
 def send_command(command):
     global roll, pitch, throttle, yaw
     try:
@@ -92,20 +90,32 @@ def send_command(command):
             yaw = 0.0
         elif command == 'hover':
             print("hovering until further command")
-            roll = 0.0
-            pitch = 0.0
-            throttle = 0.5
-            yaw = 0.0
+            roll = roll_default
+            pitch = pitch_default
+            throttle = throttle_default
+            yaw = yaw_default
         else:
             print("command '" + str(command) + "' received, reset speed")
-            roll = 0.0
-            pitch = 0.0
-            throttle = 0.5
-            yaw = 0.0
+            roll = roll_default
+            pitch = pitch_default
+            throttle = throttle_default
+            yaw = yaw_default
     except:
         print("failed to recognize command: " + str(command))
 
 
+# Parse gestures and map them to commands
+def parse_gesture(gesture_object):
+    if gesture_object.category_name == "Open_Palm":
+        send_command("ascend")
+    elif gesture_object.category_name == "Closed_Fist":
+        send_command("descend")
+    elif gesture_object.category_name == "Victory":
+        send_command("hover")
+    else:
+        print("Not Recognized as Command")
+
+# Main thread. Parses connection of drone and manual controls to make stuff work
 async def main():
     """Main function to connect to the drone and input manual controls"""
     global roll, pitch, yaw, throttle
@@ -165,12 +175,13 @@ async def main():
     await drone.action.land()
     print("-- end")
 
+# Allow drone to always adhere to manual controls
 async def manual_controls(drone):
     global roll, pitch, yaw, throttle
     while True:
         await drone.manual_control.set_manual_control_input(pitch, roll, throttle, yaw)
 
-
+# A threaded recognizer that activates commands by detecting gestures
 def recognizer_threaded():
     with GestureRecognizer.create_from_options(options) as recognizer:
         while cap.isOpened():
@@ -217,4 +228,6 @@ def recognizer_threaded():
               break
     cap.release()
 
-asyncio.run(main())
+# Running it. Only do stuff if its the main program
+if __name__ == '__main__':
+    asyncio.run(main())
