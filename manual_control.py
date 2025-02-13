@@ -107,7 +107,7 @@ def send_command(command):
 
 
 # Parse gestures and map them to commands
-def parse_gesture(gesture_object):
+def parse_gesture(gesture_object, landmarks_mapping):
     global drone_manual_control_initialized
     if gesture_object.category_name == "Thumb_Up":
         send_command("ascend")
@@ -120,7 +120,7 @@ def parse_gesture(gesture_object):
     elif gesture_object.category_name == "Pointing_Up":
         # CHECK POINT DIRECTION. FOR NOW REMAIN HOVER
         send_command("hover")
-    elif gesture_object.category_name == "I_Love_You":
+    elif gesture_object.category_name == "ILoveYou":
         print("Landing and Turning Off Drone")
         drone_manual_control_initialized = False
     else:
@@ -212,8 +212,8 @@ def recognizer_threaded():
             try:
                 top_gesture = recognition_result.gestures[0][0]
                 print("Gesture Probably: " + str(top_gesture.category_name))
-                parse_gesture(top_gesture)
                 hand_landmarks = recognition_result.hand_landmarks
+                parse_gesture(top_gesture, hand_landmarks)
             except:
                 print("Unrecognized Gestures")
                 cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
